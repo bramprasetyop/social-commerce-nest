@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  api-socialcommerce-nest:
+    container_name: api-socialcommerce-nest
+    # image: docker-image:tag
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: on-failure
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./src:/app/src
+      - ./logs:/app/logs
+    networks:
+      - net-socialcommerce-nest
+
+  api-socialcommerce-redis:
+    image: redis:7.2.2-alpine
+    container_name: api-socialcommerce-redis
+    restart: on-failure
+    ports:
+      - 6379:6379
+    networks:
+      - net-socialcommerce-nest
+
+  db-socialcommerce-nest:
+    image: postgres:16-alpine
+    container_name: db-socialcommerce-nest
+    restart: on-failure
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: user
+      POSTGRES_DB: db_social_commerce
+    networks:
+      - net-socialcommerce-nest
+
+networks:
+  net-socialcommerce-nest:
+    name: net-socialcommerce-nest
+    external: false

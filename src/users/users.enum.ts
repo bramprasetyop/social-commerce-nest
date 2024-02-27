@@ -1,0 +1,7 @@
+enum Permission {
+  USER_CAN_VIEW = 'USER_CAN_VIEW',
+  USER_CAN_CREATE = 'USER_CAN_CREATE',
+  USER_CAN_EDIT = 'USER_CAN_EDIT',
+  USER_CAN_DELETE = 'USER_CAN_DELETE'
+}
+export default Permission;
