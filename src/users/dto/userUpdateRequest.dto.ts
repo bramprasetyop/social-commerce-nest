@@ -28,5 +28,37 @@ export class UserUpdateRequest {
 
   @IsOptional()
   @ApiHideProperty()
-  telpNo?: string;
+  phoneNo?: string;
+
+  @IsOptional()
+  @ApiHideProperty()
+  occupation?: string;
+
+  @IsOptional()
+  @ApiHideProperty()
+  city?: string;
+
+  @IsOptional()
+  @ApiHideProperty()
+  zipCode?: string;
+
+  @IsOptional()
+  @ApiHideProperty()
+  maritalStatus?: string;
+
+  @IsOptional()
+  @ApiHideProperty()
+  gender?: string;
+
+  @IsOptional()
+  @ApiHideProperty()
+  idCardPhoto?: string;
+
+  @IsOptional()
+  @ApiHideProperty()
+  selfiePhoto?: string;
+
+  @IsOptional()
+  @ApiHideProperty()
+  updatedBy?: string;
 }

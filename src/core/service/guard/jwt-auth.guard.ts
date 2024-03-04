@@ -52,11 +52,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       throw new UnauthorizedException('Access token not found');
     }
 
-    // const decodedToken: any = jwt.decode(accessToken);
-    request.user = {
-      CLAIM: ['CLAIM_CAN_VIEW'],
-      GENERATELINK: ['GENERATELINK_CAN_CREATE']
-    };
+    const decodedToken: any = jwt.decode(accessToken);
+    request.permissions = ['GENERATELINK_CAN_CREATE', 'CLAIM_CAN_VIEW'];
+    request.user = decodedToken;
 
     try {
       const isValidToken = await this.verifyToken(accessToken);

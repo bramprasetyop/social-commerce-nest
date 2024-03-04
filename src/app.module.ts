@@ -25,8 +25,9 @@ import { OtpsModule } from './otp/otps.module';
 import { PartnerUsersModule } from './partnerUsers/partnerUsers.module';
 import { PartnersModule } from './partners/partners.module';
 import { PermissionsModule } from './permissions/permissions.module';
+import { UserHeirsModule } from './userHeirs/userHeirs.module';
 import { UserProductsModule } from './userProducts/userProducts.module';
-import { usersModule } from './users/users.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -53,7 +54,8 @@ import { usersModule } from './users/users.module';
     PartnersModule,
     PartnerUsersModule,
     UserProductsModule,
-    usersModule
+    UsersModule,
+    UserHeirsModule
   ],
   controllers: [HomeController],
   providers: [LoggerService]

@@ -16,9 +16,13 @@ export class PartnerUserCreateRequest {
 
   @IsString()
   @IsNotEmpty()
-  telpNo: string;
+  phoneNo: string;
 
   @IsOptional()
   @ApiHideProperty()
-  status?: boolean;
+  isActive?: boolean;
+
+  @IsOptional()
+  @ApiHideProperty()
+  createdBy?: string;
 }

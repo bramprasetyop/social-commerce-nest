@@ -5,6 +5,7 @@ import { OTP_REPOSITORY } from '@src/core/constants';
 import { LoggerService } from '@src/core/service/logger/logger.service';
 import { Job } from 'bull';
 import { Cache } from 'cache-manager';
+import * as moment from 'moment-timezone';
 
 import { OtpCreateRequest, OtpUpdateRequest } from '../dto';
 import { OTP } from '../entity/otp.entity';
@@ -21,21 +22,26 @@ export class OtpProcessor {
   @Process('addOtpQueue')
   async processAddOtp(job: Job<OtpCreateRequest>) {
     const otpData = job.data;
-    const { userId } = otpData;
+    const { createdBy } = otpData;
 
     const t = await this.otpRepository.sequelize.transaction();
 
     try {
       this.logger.log('Starting add otp in bull processor', '===running===');
 
-      const createdOtp = await this.otpRepository.create<OTP>(otpData, {
-        transaction: t
-      });
+      const expired = moment().add(2, 'hours').tz('Asia/Bangkok').toDate();
+
+      const createdOtp = await this.otpRepository.create<OTP>(
+        { ...otpData, expired },
+        {
+          transaction: t
+        }
+      );
 
       await t.commit();
       const keys = await this.cacheService.store.keys();
       const keysToDelete = keys.filter(key =>
-        key.startsWith(`otpData${userId}`)
+        key.startsWith(`otpData${createdBy}`)
       );
 
       for (const keyToDelete of keysToDelete) {
@@ -61,7 +67,7 @@ export class OtpProcessor {
   @Process('updateOtpQueue')
   async processUpdateOtp(job: Job<OtpUpdateRequest>) {
     const otpData = job.data;
-    const { id, userId } = otpData;
+    const { id, updatedBy } = otpData;
 
     const t = await this.otpRepository.sequelize.transaction();
 
@@ -77,7 +83,7 @@ export class OtpProcessor {
       await t.commit();
       const keys = await this.cacheService.store.keys();
       const keysToDelete = keys.filter(key =>
-        key.startsWith(`otpData${userId}`)
+        key.startsWith(`otpData${updatedBy}`)
       );
 
       for (const keyToDelete of keysToDelete) {

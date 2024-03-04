@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { ApiHideProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class OtpUpdateRequest {
   @IsString()
@@ -16,4 +17,12 @@ export class OtpUpdateRequest {
   @IsString()
   @IsNotEmpty()
   otp: string;
+
+  @IsString()
+  @IsNotEmpty()
+  otpType: string;
+
+  @IsOptional()
+  @ApiHideProperty()
+  updatedBy?: string;
 }

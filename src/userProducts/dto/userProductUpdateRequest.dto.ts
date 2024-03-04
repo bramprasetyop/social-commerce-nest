@@ -1,4 +1,11 @@
-import { IsInt, IsNotEmpty, IsString } from 'class-validator';
+import { ApiHideProperty } from '@nestjs/swagger';
+import {
+  IsBoolean,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString
+} from 'class-validator';
 
 export class UserProductUpdateRequest {
   @IsString()
@@ -19,5 +26,13 @@ export class UserProductUpdateRequest {
 
   @IsInt()
   @IsNotEmpty()
-  amount: number;
+  sumAssured: number;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  isEPolicy: boolean;
+
+  @IsOptional()
+  @ApiHideProperty()
+  updatedBy?: string;
 }

@@ -2,10 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class SwaggerMetaResponse {
   @ApiProperty({ example: 200 })
-  status_code: number;
+  statusCode: number;
 
   @ApiProperty({ example: 'Inquiry berhasil' })
-  status_description: string;
+  statusDescription: string;
 }
 
 export class Meta {

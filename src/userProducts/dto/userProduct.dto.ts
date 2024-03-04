@@ -3,9 +3,10 @@ export class UserProductResponse {
   readonly productId: string;
   readonly partnerId: string;
   readonly userId: string;
-  readonly amount: number;
+  readonly sumAssured: number;
   readonly expired: Date;
-  readonly status: boolean;
+  readonly isActive: boolean;
+  readonly isEPolicy: boolean;
   readonly createdAt: Date;
   readonly createdBy: string;
   readonly updatedAt: Date;

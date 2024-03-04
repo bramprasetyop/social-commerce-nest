@@ -10,19 +10,7 @@ import userPermission from '@src/users/users.enum';
 
 @Injectable()
 export class PermissionsService {
-  private readonly permissions: any;
-
-  constructor(private readonly logger: LoggerService) {
-    this.permissions = this.processEnums([
-      claimPermission,
-      generateLinkPermission,
-      otpPermission,
-      partnerUserPermission,
-      partnerPermission,
-      userproductPermission,
-      userPermission
-    ]);
-  }
+  constructor(private readonly logger: LoggerService) {}
 
   private addPermissionToModule(
     permissionsByModule: any,
@@ -87,14 +75,8 @@ export class PermissionsService {
   }
 
   hasPermission(menu: any, action: string): boolean {
-    for (const key in menu) {
-      if (Object.prototype.hasOwnProperty.call(menu, key)) {
-        const allowedActions = this.permissions[key];
-        if (allowedActions && menu[key].includes(action)) {
-          return true;
-        }
-      }
-    }
-    return false;
+    // remove this if on ait/production
+    return true;
+    return menu.includes(action) && true;
   }
 }

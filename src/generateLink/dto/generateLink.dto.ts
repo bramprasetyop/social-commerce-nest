@@ -3,7 +3,7 @@ export class GenerateLinkResponse {
   readonly partnerId: string;
   readonly partnerUserId: string;
   readonly userId: string;
-  readonly status: boolean;
+  readonly isActive: boolean;
   readonly link: string;
   readonly expired: Date;
   readonly createdAt: Date;

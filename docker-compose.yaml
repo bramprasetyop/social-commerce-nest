@@ -14,6 +14,7 @@ services:
       - ./logs:/app/logs
     networks:
       - net-socialcommerce-nest
+      - open-api-network
 
   api-socialcommerce-redis:
     image: redis:7.2.2-alpine
@@ -23,6 +24,7 @@ services:
       - 6379:6379
     networks:
       - net-socialcommerce-nest
+      - open-api-network
 
   db-socialcommerce-nest:
     image: postgres:16-alpine
@@ -36,8 +38,12 @@ services:
       POSTGRES_DB: db_social_commerce
     networks:
       - net-socialcommerce-nest
+      - open-api-network
 
 networks:
   net-socialcommerce-nest:
     name: net-socialcommerce-nest
     external: false
+  open-api-network:
+    name: open-api-network
+    external: true

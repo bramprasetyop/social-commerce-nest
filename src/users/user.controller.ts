@@ -44,11 +44,7 @@ export class UsersController {
   ): Promise<UserFindAllResponse> {
     try {
       const { user } = request;
-      return await this.user.findAll(
-        user?.id_user,
-        +query?.page,
-        +query?.perPage
-      );
+      return await this.user.findAll(user?.nip, +query?.page, +query?.perPage);
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }
@@ -68,12 +64,12 @@ export class UsersController {
   @Permissions('USER', Permission.USER_CAN_VIEW)
   @Get(`${API_PREFIX}users/:id`)
   async findDetail(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Req() request
   ): Promise<UserResponse> {
     try {
       const { user } = request;
-      return await this.user.findById(user?.id_user, id);
+      return await this.user.findById(user?.nip, id);
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }
@@ -91,7 +87,7 @@ export class UsersController {
       const { user } = request;
       const jobData = {
         ...body,
-        ...{ userId: user?.id_user }
+        ...{ createdBy: user?.nip }
       };
       return await this.user.create(jobData);
     } catch (error) {
@@ -111,7 +107,7 @@ export class UsersController {
       const { user } = request;
       const jobData = {
         ...body,
-        ...{ userId: user?.id_user }
+        ...{ updatedBy: user?.nip }
       };
 
       return await this.user.update(jobData);
@@ -126,7 +122,7 @@ export class UsersController {
   async delete(@Param('id') id: string, @Req() request): Promise<any> {
     try {
       const { user } = request;
-      return await this.user.delete(user?.id_user, id);
+      return await this.user.delete(user?.nip, id);
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }

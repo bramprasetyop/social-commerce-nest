@@ -104,7 +104,7 @@ export class UsersService {
     }
   }
 
-  async findById(userId: string, id: number): Promise<User> {
+  async findById(userId: string, id: string): Promise<User> {
     try {
       this.logger.log(
         'starting get detail user through existing cached',
@@ -125,11 +125,7 @@ export class UsersService {
 
       this.logger.log('starting get detail user through db', '===running===');
 
-      const response = await this.userRepository.findOne({
-        where: {
-          id
-        }
-      });
+      const response = await this.userRepository.findByPk(id);
 
       if (!response) {
         this.logger.error(
@@ -231,28 +227,42 @@ export class UsersService {
     }
   }
 
-  async delete(userId: string, id: string): Promise<any> {
+  async delete(deletedBy: string, id: string): Promise<any> {
+    const transaction = await this.sequelize.transaction();
+
     try {
       this.logger.log('starting delete user', '===running===');
 
-      const response = await this.userRepository.destroy({
-        where: { id }
-      });
+      const user = await this.userRepository.findByPk(id);
 
-      if (!response) {
+      if (!user) {
         this.logger.error(
           '===== Error user by id =====',
           `Error: `,
-          'ID User tidak ditemukan.'
+          'ID user tidak ditemukan.'
         );
         throw new NotFoundException(
-          'ID User tidak ditemukan, Mohon periksa kembali.'
+          'ID user tidak ditemukan, Mohon periksa kembali.'
         );
       }
 
+      await user.update(
+        { deletedBy },
+        {
+          transaction
+        }
+      );
+
+      const response = await this.userRepository.destroy({
+        where: { id },
+        transaction
+      });
+
+      await transaction.commit();
+
       const keys = await this.cacheService.store.keys();
       const keysToDelete = keys.filter(key =>
-        key.startsWith(`userData${userId}`)
+        key.startsWith(`userData${deletedBy}`)
       );
 
       for (const keyToDelete of keysToDelete) {
@@ -263,7 +273,7 @@ export class UsersService {
 
       return {
         statusCode: 201,
-        statusDescription: 'Berhasil menghapus User.'
+        statusDescription: 'Berhasil menghapus user.'
       };
     } catch (error) {
       this.logger.error(
@@ -271,6 +281,7 @@ export class UsersService {
         'error ===>',
         JSON.stringify(error, null, 2)
       );
+      await transaction.rollback();
       throw new Error(error.message);
     }
   }

@@ -53,6 +53,13 @@ export class OTP extends Model<OTP> {
   otp: string;
 
   @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    field: 'otp_type'
+  })
+  otpType: string;
+
+  @Column({
     type: DataType.DATE,
     allowNull: false,
     field: 'expired'
@@ -63,9 +70,9 @@ export class OTP extends Model<OTP> {
     type: DataType.BOOLEAN,
     allowNull: false,
     defaultValue: true,
-    field: 'status'
+    field: 'is_active'
   })
-  status: boolean;
+  isActive: boolean;
 
   @Column({
     type: DataType.DATE,

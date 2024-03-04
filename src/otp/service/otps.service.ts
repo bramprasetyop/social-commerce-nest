@@ -104,7 +104,7 @@ export class OtpsService {
     }
   }
 
-  async findById(userId: string, id: number): Promise<OTP> {
+  async findById(userId: string, id: string): Promise<OTP> {
     try {
       this.logger.log(
         'starting get detail otp through existing cached',
@@ -125,11 +125,7 @@ export class OtpsService {
 
       this.logger.log('starting get detail otp through db', '===running===');
 
-      const response = await this.otpRepository.findOne({
-        where: {
-          id
-        }
-      });
+      const response = await this.otpRepository.findByPk(id);
 
       if (!response) {
         this.logger.error(
@@ -228,15 +224,16 @@ export class OtpsService {
     }
   }
 
-  async delete(userId: string, id: string): Promise<any> {
+  async delete(dto: any): Promise<any> {
+    const transaction = await this.sequelize.transaction();
+
     try {
+      const { id, deletedBy } = dto;
       this.logger.log('starting delete otp', '===running===');
 
-      const response = await this.otpRepository.destroy({
-        where: { id }
-      });
+      const otp = await this.otpRepository.findByPk(id);
 
-      if (!response) {
+      if (!otp) {
         this.logger.error(
           '===== Error otp by id =====',
           `Error: `,
@@ -247,9 +244,23 @@ export class OtpsService {
         );
       }
 
+      await otp.update(
+        { deletedBy },
+        {
+          transaction
+        }
+      );
+
+      const response = await this.otpRepository.destroy({
+        where: { id },
+        transaction
+      });
+
+      await transaction.commit();
+
       const keys = await this.cacheService.store.keys();
       const keysToDelete = keys.filter(key =>
-        key.startsWith(`otpData${userId}`)
+        key.startsWith(`otpData${deletedBy}`)
       );
 
       for (const keyToDelete of keysToDelete) {
@@ -268,6 +279,7 @@ export class OtpsService {
         'error ===>',
         JSON.stringify(error, null, 2)
       );
+      await transaction.rollback();
       throw new Error(error.message);
     }
   }

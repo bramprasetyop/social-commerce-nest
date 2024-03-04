@@ -20,9 +20,13 @@ export class PartnerUserUpdateRequest {
 
   @IsString()
   @IsNotEmpty()
-  telpNo: string;
+  phoneNo: string;
 
   @IsOptional()
   @ApiHideProperty()
-  status?: boolean;
+  isActive?: boolean;
+
+  @IsOptional()
+  @ApiHideProperty()
+  updatedBy?: string;
 }

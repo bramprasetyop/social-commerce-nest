@@ -38,32 +38,81 @@ export class User extends Model<User> {
   @Column({
     type: DataType.STRING,
     allowNull: true,
-    field: 'email',
-    unique: true
+    field: 'email'
   })
   email: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: true,
-    field: 'nik'
+    field: 'nik',
+    unique: true
   })
   nik: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: true,
-    field: 'telp_no'
+    field: 'phone_no'
   })
-  telpNo: string;
+  phoneNo: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'occupation'
+  })
+  occupation: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'city'
+  })
+  city: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'zip_code'
+  })
+  zipCode: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'marital_status'
+  })
+  maritalStatus: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'gender'
+  })
+  gender: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'id_card_photo'
+  })
+  idCardPhoto: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'selfie_photo'
+  })
+  selfiePhoto: string;
 
   @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
     defaultValue: true,
-    field: 'status'
+    field: 'is_active'
   })
-  status: boolean;
+  isActive: boolean;
 
   @Column({
     type: DataType.DATE,

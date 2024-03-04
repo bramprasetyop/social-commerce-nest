@@ -44,11 +44,7 @@ export class OtpsController {
   ): Promise<OtpFindAllResponse> {
     try {
       const { user } = request;
-      return await this.otp.findAll(
-        user?.id_user,
-        +query?.page,
-        +query?.perPage
-      );
+      return await this.otp.findAll(user?.nip, +query?.page, +query?.perPage);
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }
@@ -68,12 +64,12 @@ export class OtpsController {
   @Permissions('OTP', Permission.OTP_CAN_VIEW)
   @Get(`${API_PREFIX}otp/:id`)
   async findDetail(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Req() request
   ): Promise<OtpResponse> {
     try {
       const { user } = request;
-      return await this.otp.findById(user?.id_user, id);
+      return await this.otp.findById(user?.nip, id);
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }
@@ -91,7 +87,7 @@ export class OtpsController {
       const { user } = request;
       const jobData = {
         ...body,
-        ...{ userId: user?.id_user }
+        ...{ createdBy: user?.nip }
       };
       return await this.otp.create(jobData);
     } catch (error) {
@@ -111,7 +107,7 @@ export class OtpsController {
       const { user } = request;
       const jobData = {
         ...body,
-        ...{ userId: user?.id_user }
+        ...{ updatedBy: user?.nip }
       };
 
       return await this.otp.update(jobData);
@@ -126,7 +122,7 @@ export class OtpsController {
   async delete(@Param('id') id: string, @Req() request): Promise<any> {
     try {
       const { user } = request;
-      return await this.otp.delete(user?.id_user, id);
+      return await this.otp.delete({ deletedBy: user?.nip, id });
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }

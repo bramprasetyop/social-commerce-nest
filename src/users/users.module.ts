@@ -30,4 +30,4 @@ import { userProviders } from './users.providers';
   controllers: [UsersController],
   exports: [UsersService, LoggerService, PermissionsService]
 })
-export class usersModule {}
+export class UsersModule {}

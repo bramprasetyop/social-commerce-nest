@@ -5,8 +5,15 @@ export class UserResponse {
   readonly address: string;
   readonly email: string;
   readonly nik: string;
-  readonly telpNo: string;
-  readonly status: boolean;
+  readonly phoneNo: string;
+  readonly occupation: string;
+  readonly city: string;
+  readonly zipCode: string;
+  readonly maritalStatus: string;
+  readonly gender: string;
+  readonly idCardPhoto: string;
+  readonly selfiePhoto: string;
+  readonly isActive: boolean;
   readonly createdAt: Date;
   readonly createdBy: string;
   readonly updatedAt: Date;

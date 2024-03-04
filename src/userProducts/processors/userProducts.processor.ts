@@ -5,6 +5,7 @@ import { USER_PRODUCTS_REPOSITORY } from '@src/core/constants';
 import { LoggerService } from '@src/core/service/logger/logger.service';
 import { Job } from 'bull';
 import { Cache } from 'cache-manager';
+import * as moment from 'moment-timezone';
 
 import { UserProductCreateRequest, UserProductUpdateRequest } from '../dto';
 import { UserProduct } from '../entity/userProduct.entity';
@@ -21,7 +22,7 @@ export class UserProductProcessor {
   @Process('addUserProductQueue')
   async processAddUserProduct(job: Job<UserProductCreateRequest>) {
     const userProductData = job.data;
-    const { userId } = userProductData;
+    const { createdBy } = userProductData;
 
     const t = await this.userProductRepository.sequelize.transaction();
 
@@ -31,15 +32,20 @@ export class UserProductProcessor {
         '===running==='
       );
 
+      const expired = moment().add(24, 'hours').tz('Asia/Bangkok').toDate();
+
       const createdUserProduct =
-        await this.userProductRepository.create<UserProduct>(userProductData, {
-          transaction: t
-        });
+        await this.userProductRepository.create<UserProduct>(
+          { ...userProductData, expired },
+          {
+            transaction: t
+          }
+        );
 
       await t.commit();
       const keys = await this.cacheService.store.keys();
       const keysToDelete = keys.filter(key =>
-        key.startsWith(`userProductData${userId}`)
+        key.startsWith(`userProductData${createdBy}`)
       );
 
       for (const keyToDelete of keysToDelete) {
@@ -65,7 +71,7 @@ export class UserProductProcessor {
   @Process('updateUserProductQueue')
   async processUpdateUserProduct(job: Job<UserProductUpdateRequest>) {
     const userProductData = job.data;
-    const { id, userId } = userProductData;
+    const { id, updatedBy } = userProductData;
 
     const t = await this.userProductRepository.sequelize.transaction();
 
@@ -84,7 +90,7 @@ export class UserProductProcessor {
       await t.commit();
       const keys = await this.cacheService.store.keys();
       const keysToDelete = keys.filter(key =>
-        key.startsWith(`userProductData${userId}`)
+        key.startsWith(`userProductData${updatedBy}`)
       );
 
       for (const keyToDelete of keysToDelete) {

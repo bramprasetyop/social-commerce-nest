@@ -25,9 +25,9 @@ export class Partner extends Model<Partner> {
     type: DataType.BOOLEAN,
     allowNull: false,
     defaultValue: true,
-    field: 'status'
+    field: 'is_active'
   })
-  status: boolean;
+  isActive: boolean;
 
   @Column({
     type: DataType.DATE,

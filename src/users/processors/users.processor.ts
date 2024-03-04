@@ -21,7 +21,7 @@ export class UserProcessor {
   @Process('addUserQueue')
   async processAddUser(job: Job<UserCreateRequest>) {
     const userData = job.data;
-    const { name } = userData;
+    const { createdBy } = userData;
 
     const t = await this.userRepository.sequelize.transaction();
 
@@ -35,7 +35,7 @@ export class UserProcessor {
       await t.commit();
       const keys = await this.cacheService.store.keys();
       const keysToDelete = keys.filter(key =>
-        key.startsWith(`userData${name}`)
+        key.startsWith(`userData${createdBy}`)
       );
 
       for (const keyToDelete of keysToDelete) {
@@ -61,7 +61,7 @@ export class UserProcessor {
   @Process('updateUserQueue')
   async processUpdateUser(job: Job<UserUpdateRequest>) {
     const userData = job.data;
-    const { id, name } = userData;
+    const { id, updatedBy } = userData;
 
     const t = await this.userRepository.sequelize.transaction();
 
@@ -80,7 +80,7 @@ export class UserProcessor {
       await t.commit();
       const keys = await this.cacheService.store.keys();
       const keysToDelete = keys.filter(key =>
-        key.startsWith(`userData${name}`)
+        key.startsWith(`userData${updatedBy}`)
       );
 
       for (const keyToDelete of keysToDelete) {

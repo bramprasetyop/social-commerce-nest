@@ -45,7 +45,7 @@ export class PartnersController {
     try {
       const { user } = request;
       return await this.partner.findAll(
-        user?.id_user,
+        user?.nip,
         +query?.page,
         +query?.perPage
       );
@@ -68,12 +68,12 @@ export class PartnersController {
   @Permissions('PARTNER', Permission.PARTNER_CAN_VIEW)
   @Get(`${API_PREFIX}partners/:id`)
   async findDetail(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Req() request
   ): Promise<PartnerResponse> {
     try {
       const { user } = request;
-      return await this.partner.findById(user?.id_user, id);
+      return await this.partner.findById(user?.nip, id);
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }
@@ -94,7 +94,7 @@ export class PartnersController {
       const { user } = request;
       const jobData = {
         ...body,
-        ...{ userId: user?.id_user }
+        ...{ createdBy: user?.nip }
       };
       return await this.partner.create(jobData);
     } catch (error) {
@@ -117,7 +117,7 @@ export class PartnersController {
       const { user } = request;
       const jobData = {
         ...body,
-        ...{ userId: user?.id_user }
+        ...{ updatedBy: user?.nip }
       };
 
       return await this.partner.update(jobData);
@@ -132,7 +132,7 @@ export class PartnersController {
   async delete(@Param('id') id: string, @Req() request): Promise<any> {
     try {
       const { user } = request;
-      return await this.partner.delete(user?.id_user, id);
+      return await this.partner.delete({ deletedBy: user?.nip, id });
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }

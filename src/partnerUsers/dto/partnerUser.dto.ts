@@ -3,8 +3,8 @@ export class PartnerUserResponse {
   readonly partnerId: string;
   readonly name: string;
   readonly email: string;
-  readonly telpNo: string;
-  readonly status: boolean;
+  readonly phoneNo: string;
+  readonly isActive: boolean;
   readonly createdAt: Date;
   readonly createdBy: string;
   readonly updatedAt: Date;

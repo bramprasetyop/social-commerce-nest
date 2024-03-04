@@ -104,7 +104,7 @@ export class PartnersService {
     }
   }
 
-  async findById(userId: string, id: number): Promise<Partner> {
+  async findById(userId: string, id: string): Promise<Partner> {
     try {
       this.logger.log(
         'starting get detail partner through existing cached',
@@ -174,10 +174,8 @@ export class PartnersService {
         '===running==='
       );
 
-      let createPartnerResponse;
       const job = await this.partnerQueue.add('addPartnerQueue', dto);
-      // eslint-disable-next-line prefer-const
-      createPartnerResponse = await job.finished();
+      const createPartnerResponse = await job.finished();
       this.logger.log(
         'success add partner to db',
         JSON.stringify(dto, null, 2)
@@ -212,10 +210,10 @@ export class PartnersService {
         this.logger.error(
           '===== Error while find partner by id on update =====',
           `Error: `,
-          'ID klaim tidak ditemukan'
+          'ID partner tidak ditemukan'
         );
         throw new NotFoundException(
-          'ID klaim tidak ditemukan, Mohon periksa kembali.'
+          'ID partner tidak ditemukan, Mohon periksa kembali.'
         );
       }
 
@@ -243,15 +241,16 @@ export class PartnersService {
     }
   }
 
-  async delete(userId: string, id: string): Promise<any> {
+  async delete(dto: any): Promise<any> {
+    const transaction = await this.sequelize.transaction();
+
     try {
+      const { id, deletedBy } = dto;
       this.logger.log('starting delete partner', '===running===');
 
-      const response = await this.partnerRepository.destroy({
-        where: { id }
-      });
+      const partner = await this.partnerRepository.findByPk(id);
 
-      if (!response) {
+      if (!partner) {
         this.logger.error(
           '===== Error partner by id =====',
           `Error: `,
@@ -262,9 +261,23 @@ export class PartnersService {
         );
       }
 
+      await partner.update(
+        { deletedBy },
+        {
+          transaction
+        }
+      );
+
+      const response = await this.partnerRepository.destroy({
+        where: { id },
+        transaction
+      });
+
+      await transaction.commit();
+
       const keys = await this.cacheService.store.keys();
       const keysToDelete = keys.filter(key =>
-        key.startsWith(`partnerData${userId}`)
+        key.startsWith(`partnerData${deletedBy}`)
       );
 
       for (const keyToDelete of keysToDelete) {
@@ -286,6 +299,7 @@ export class PartnersService {
         'error ===>',
         JSON.stringify(error, null, 2)
       );
+      await transaction.rollback();
       throw new Error(error.message);
     }
   }

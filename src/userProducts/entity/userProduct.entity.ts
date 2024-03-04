@@ -55,9 +55,17 @@ export class UserProduct extends Model<UserProduct> {
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
-    field: 'amount'
+    field: 'sum_assured'
   })
-  amount: number;
+  sumAssured: number;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+    field: 'is_e_policy'
+  })
+  isEPolicy: boolean;
 
   @Column({
     type: DataType.DATE,
@@ -70,9 +78,9 @@ export class UserProduct extends Model<UserProduct> {
     type: DataType.BOOLEAN,
     allowNull: false,
     defaultValue: true,
-    field: 'status'
+    field: 'is_active'
   })
-  status: boolean;
+  isActive: boolean;
 
   @Column({
     type: DataType.DATE,

@@ -6,7 +6,6 @@ import {
   InternalServerErrorException,
   Param,
   Post,
-  Put,
   Query,
   Req,
   UseGuards
@@ -14,7 +13,8 @@ import {
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Permissions } from '@src/auth/auth.permission.decorator';
 import { PermissionGuard } from '@src/auth/auth.permission.guard';
-import { API_PREFIX } from '@src/core/constants';
+import { API_PREFIX, OPEN_API_PREFIX } from '@src/core/constants';
+import { RequestHeader } from '@src/core/service/customDecorator/headers';
 import { JwtAuthGuard } from '@src/core/service/guard';
 import { MapResponseSwagger } from '@src/core/utils/index.utils';
 
@@ -23,7 +23,7 @@ import {
   GenerateLinkFindAllResponse,
   GenerateLinkRequestList,
   GenerateLinkResponse,
-  GenerateLinkUpdateRequest
+  OpenAPIHeaderRequest
 } from './dto';
 import Permission from './generateLinks.enum';
 import { GenerateLinkService } from './service/generateLinks.service';
@@ -45,7 +45,7 @@ export class GenerateLinksController {
     try {
       const { user } = request;
       return await this.generateLink.findAll(
-        user?.id_user,
+        user?.nip,
         +query?.page,
         +query?.perPage
       );
@@ -68,12 +68,12 @@ export class GenerateLinksController {
   @Permissions('GENERATELINK', Permission.GENERATELINK_CAN_VIEW)
   @Get(`${API_PREFIX}generate-link/:id`)
   async findDetail(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Req() request
   ): Promise<GenerateLinkResponse> {
     try {
       const { user } = request;
-      return await this.generateLink.findById(user?.id_user, id);
+      return await this.generateLink.findById(user?.nip, id);
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }
@@ -83,44 +83,27 @@ export class GenerateLinksController {
     status: 200,
     isArray: false
   })
-  @UseGuards(JwtAuthGuard, PermissionGuard)
-  @Permissions('GENERATELINK', Permission.GENERATELINK_CAN_CREATE)
-  @Post(`${API_PREFIX}generate-link`)
+  @Post(`${OPEN_API_PREFIX}generate-link`)
   async create(
-    @Body() body: GenerateLinkCreateRequest,
-    @Req() request
+    @RequestHeader(OpenAPIHeaderRequest) headers: OpenAPIHeaderRequest,
+    @Body() body: GenerateLinkCreateRequest
   ): Promise<any> {
     try {
-      const { user } = request;
-      const jobData = {
-        ...body,
-        ...{ userId: user?.id_user }
-      };
-      return await this.generateLink.create(jobData);
-    } catch (error) {
-      throw new InternalServerErrorException(error?.message);
-    }
-  }
+      const {
+        'X-TIMESTAMP': timestamp,
+        'X-CLIENT-ID': clientId,
+        'X-SIGNATURE': signature,
+        Authorization: accessToken
+      } = headers;
 
-  @MapResponseSwagger(GenerateLinkUpdateRequest, {
-    status: 200,
-    isArray: false
-  })
-  @UseGuards(JwtAuthGuard, PermissionGuard)
-  @Permissions('GENERATELINK', Permission.GENERATELINK_CAN_EDIT)
-  @Put(`${API_PREFIX}generate-link`)
-  async update(
-    @Body() body: GenerateLinkUpdateRequest,
-    @Req() request
-  ): Promise<any> {
-    try {
-      const { user } = request;
-      const jobData = {
-        ...body,
-        ...{ userId: user?.id_user }
+      const generateLinkData = {
+        relativeUrl: 'generate-link',
+        clientId,
+        accessToken,
+        signature,
+        timestamp
       };
-
-      return await this.generateLink.update(jobData);
+      return await this.generateLink.create(generateLinkData, body);
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }
@@ -132,7 +115,7 @@ export class GenerateLinksController {
   async delete(@Param('id') id: string, @Req() request): Promise<any> {
     try {
       const { user } = request;
-      return await this.generateLink.delete(user?.id_user, id);
+      return await this.generateLink.delete({ deletedBy: user?.nip, id });
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }

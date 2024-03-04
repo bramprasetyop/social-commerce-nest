@@ -37,5 +37,6 @@ export const checkConfigService = () =>
     'SFTP_PORT',
     'SFTP_USERNAME',
     'SFTP_PASSWORD',
-    'BULLMQ_PASS'
+    'BULLMQ_PASS',
+    'OPEN_API_URL'
   ]);

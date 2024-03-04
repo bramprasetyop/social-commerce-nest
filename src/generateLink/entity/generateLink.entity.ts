@@ -55,14 +55,6 @@ export class GenerateLink extends Model<GenerateLink> {
   user: User;
 
   @Column({
-    type: DataType.BOOLEAN,
-    allowNull: false,
-    defaultValue: true,
-    field: 'status'
-  })
-  status: boolean;
-
-  @Column({
     type: DataType.TEXT,
     allowNull: false,
     field: 'link'
@@ -74,6 +66,14 @@ export class GenerateLink extends Model<GenerateLink> {
     field: 'expired'
   })
   expired: Date;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+    field: 'is_active'
+  })
+  isActive: boolean;
 
   @Column({
     type: DataType.DATE,

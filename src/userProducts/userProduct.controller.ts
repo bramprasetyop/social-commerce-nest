@@ -45,7 +45,7 @@ export class UserProductsController {
     try {
       const { user } = request;
       return await this.userProduct.findAll(
-        user?.id_user,
+        user?.nip,
         +query?.page,
         +query?.perPage
       );
@@ -68,12 +68,12 @@ export class UserProductsController {
   @Permissions('USERPRODUCT', Permission.USERPRODUCT_CAN_VIEW)
   @Get(`${API_PREFIX}user-products/:id`)
   async findDetail(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Req() request
   ): Promise<UserProductResponse> {
     try {
       const { user } = request;
-      return await this.userProduct.findById(user?.id_user, id);
+      return await this.userProduct.findById(user?.nip, id);
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }
@@ -94,7 +94,7 @@ export class UserProductsController {
       const { user } = request;
       const jobData = {
         ...body,
-        ...{ userId: user?.id_user }
+        ...{ createdBy: user?.nip }
       };
       return await this.userProduct.create(jobData);
     } catch (error) {
@@ -117,7 +117,7 @@ export class UserProductsController {
       const { user } = request;
       const jobData = {
         ...body,
-        ...{ userId: user?.id_user }
+        ...{ updatedBy: user?.nip }
       };
 
       return await this.userProduct.update(jobData);
@@ -132,7 +132,7 @@ export class UserProductsController {
   async delete(@Param('id') id: string, @Req() request): Promise<any> {
     try {
       const { user } = request;
-      return await this.userProduct.delete(user?.id_user, id);
+      return await this.userProduct.delete(user?.nip, id);
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }

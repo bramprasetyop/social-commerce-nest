@@ -107,7 +107,7 @@ export class PartnerUsersService {
     }
   }
 
-  async findById(userId: string, id: number): Promise<PartnerUser> {
+  async findById(userId: string, id: string): Promise<PartnerUser> {
     try {
       this.logger.log(
         'starting get detail partnerUser through existing cached',
@@ -131,11 +131,7 @@ export class PartnerUsersService {
         '===running==='
       );
 
-      const response = await this.partnerUserRepository.findOne({
-        where: {
-          id
-        }
-      });
+      const response = await this.partnerUserRepository.findByPk(id);
 
       if (!response) {
         this.logger.error(
@@ -177,10 +173,8 @@ export class PartnerUsersService {
         '===running==='
       );
 
-      let createPartnerUserResponse;
       const job = await this.partnerUserQueue.add('addPartnerUserQueue', dto);
-      // eslint-disable-next-line prefer-const
-      createPartnerUserResponse = await job.finished();
+      const createPartnerUserResponse = await job.finished();
       this.logger.log(
         'success add partnerUser to db',
         JSON.stringify(dto, null, 2)
@@ -188,7 +182,7 @@ export class PartnerUsersService {
 
       return {
         statusCode: 201,
-        statusDescription: 'Create partnerUser success!',
+        statusDescription: 'Create partner user success!',
         data: createPartnerUserResponse
       };
     } catch (error) {
@@ -249,28 +243,42 @@ export class PartnerUsersService {
     }
   }
 
-  async delete(userId: string, id: string): Promise<any> {
+  async delete(deletedBy: string, id: string): Promise<any> {
+    const transaction = await this.sequelize.transaction();
+
     try {
       this.logger.log('starting delete partnerUser', '===running===');
 
-      const response = await this.partnerUserRepository.destroy({
-        where: { id }
-      });
+      const partnerUser = await this.partnerUserRepository.findByPk(id);
 
-      if (!response) {
+      if (!partnerUser) {
         this.logger.error(
           '===== Error partnerUser by id =====',
           `Error: `,
-          'ID PartnerUser tidak ditemukan.'
+          'ID partnerUser tidak ditemukan.'
         );
         throw new NotFoundException(
-          'ID PartnerUser tidak ditemukan, Mohon periksa kembali.'
+          'ID partnerUser tidak ditemukan, Mohon periksa kembali.'
         );
       }
 
+      await partnerUser.update(
+        { deletedBy },
+        {
+          transaction
+        }
+      );
+
+      const response = await this.partnerUserRepository.destroy({
+        where: { id },
+        transaction
+      });
+
+      await transaction.commit();
+
       const keys = await this.cacheService.store.keys();
       const keysToDelete = keys.filter(key =>
-        key.startsWith(`partnerUserData${userId}`)
+        key.startsWith(`partnerUserData${deletedBy}`)
       );
 
       for (const keyToDelete of keysToDelete) {
@@ -292,6 +300,7 @@ export class PartnerUsersService {
         'error ===>',
         JSON.stringify(error, null, 2)
       );
+      await transaction.rollback();
       throw new Error(error.message);
     }
   }

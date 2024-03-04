@@ -3,8 +3,9 @@ export class OtpResponse {
   readonly userId: string;
   readonly partnerId: string;
   readonly otp: string;
+  readonly otpType: string;
   readonly expired: Date;
-  readonly status: boolean;
+  readonly isActive: boolean;
   readonly createdAt: Date;
   readonly createdBy: string;
   readonly updatedAt: Date;

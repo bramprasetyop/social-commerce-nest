@@ -9,7 +9,7 @@ import {
 } from 'sequelize-typescript';
 
 @Table({
-  tableName: 'partner_users',
+  tableName: 'partner_referrers',
   timestamps: true,
   paranoid: true
 })
@@ -45,24 +45,26 @@ export class PartnerUser extends Model<PartnerUser> {
   @Column({
     type: DataType.STRING,
     allowNull: false,
-    field: 'email'
+    field: 'email',
+    unique: true
   })
   email: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
-    field: 'telp_no'
+    field: 'phone_no',
+    unique: true
   })
-  telpNo: string;
+  phoneNo: string;
 
   @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
     defaultValue: true,
-    field: 'status'
+    field: 'is_active'
   })
-  status: boolean;
+  isActive: boolean;
 
   @Column({
     type: DataType.DATE,

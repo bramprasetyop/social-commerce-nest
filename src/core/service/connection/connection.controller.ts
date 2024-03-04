@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
 
-import { ExternalAPIHealthIndicator } from './connection.externalAPI.service';
+import { EliOpenAPIHealthIndicator } from './connection.EliOpenAPI.service';
 import { RedisHealthIndicator } from './connection.redis.service';
 import { SequelizeHealthIndicator } from './connection.sequelize.service';
 import { SftpHealthIndicator } from './connection.sftp.service';
@@ -12,7 +12,7 @@ export class ConnectionController {
     private readonly connection: HealthCheckService,
     private readonly sequelizeHealthIndicator: SequelizeHealthIndicator,
     private readonly redisHealthIndicator: RedisHealthIndicator,
-    private readonly externalApiIndicator: ExternalAPIHealthIndicator,
+    private readonly eliOpenAPI: EliOpenAPIHealthIndicator,
     private sftpHealthIndicator: SftpHealthIndicator
   ) {}
 
@@ -23,8 +23,7 @@ export class ConnectionController {
       () => this.sequelizeHealthIndicator.isHealthy(),
       () => this.redisHealthIndicator.isHealthy(),
       async () => this.sftpHealthIndicator.isHealthy(),
-      async () =>
-        await this.externalApiIndicator.isHealthy('https://google.co.id')
+      async () => await this.eliOpenAPI.isHealthy(process.env.OPEN_API_URL)
     ]);
   }
 }

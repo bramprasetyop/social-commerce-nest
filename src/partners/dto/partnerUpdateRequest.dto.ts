@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { ApiHideProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class PartnerUpdateRequest {
   @IsString()
@@ -8,4 +9,8 @@ export class PartnerUpdateRequest {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @IsOptional()
+  @ApiHideProperty()
+  updatedBy?: string;
 }

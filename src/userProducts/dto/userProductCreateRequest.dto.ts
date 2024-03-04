@@ -1,4 +1,11 @@
-import { IsDate, IsInt, IsNotEmpty, IsString } from 'class-validator';
+import { ApiHideProperty } from '@nestjs/swagger';
+import {
+  IsBoolean,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString
+} from 'class-validator';
 
 export class UserProductCreateRequest {
   @IsString()
@@ -15,9 +22,17 @@ export class UserProductCreateRequest {
 
   @IsInt()
   @IsNotEmpty()
-  amount: number;
+  sumAssured: number;
 
-  @IsDate()
+  @IsBoolean()
   @IsNotEmpty()
-  expired: Date;
+  isEPolicy: boolean;
+
+  @IsString()
+  @IsNotEmpty()
+  expired: string;
+
+  @IsOptional()
+  @ApiHideProperty()
+  createdBy?: string;
 }

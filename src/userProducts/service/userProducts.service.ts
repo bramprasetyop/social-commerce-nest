@@ -107,7 +107,7 @@ export class UserProductsService {
     }
   }
 
-  async findById(userId: string, id: number): Promise<UserProduct> {
+  async findById(userId: string, id: string): Promise<UserProduct> {
     try {
       this.logger.log(
         'starting get detail userProduct through existing cached',
@@ -131,11 +131,7 @@ export class UserProductsService {
         '===running==='
       );
 
-      const response = await this.userProductRepository.findOne({
-        where: {
-          id
-        }
-      });
+      const response = await this.userProductRepository.findByPk(id);
 
       if (!response) {
         this.logger.error(
@@ -249,28 +245,42 @@ export class UserProductsService {
     }
   }
 
-  async delete(userId: string, id: string): Promise<any> {
+  async delete(deletedBy: string, id: string): Promise<any> {
+    const transaction = await this.sequelize.transaction();
+
     try {
-      this.logger.log('starting delete userProduct', '===running===');
+      this.logger.log('starting delete user product', '===running===');
 
-      const response = await this.userProductRepository.destroy({
-        where: { id }
-      });
+      const userProduct = await this.userProductRepository.findByPk(id);
 
-      if (!response) {
+      if (!userProduct) {
         this.logger.error(
           '===== Error userProduct by id =====',
           `Error: `,
-          'ID UserProduct tidak ditemukan.'
+          'ID user product tidak ditemukan.'
         );
         throw new NotFoundException(
-          'ID UserProduct tidak ditemukan, Mohon periksa kembali.'
+          'ID user product tidak ditemukan, Mohon periksa kembali.'
         );
       }
 
+      await userProduct.update(
+        { deletedBy },
+        {
+          transaction
+        }
+      );
+
+      const response = await this.userProductRepository.destroy({
+        where: { id },
+        transaction
+      });
+
+      await transaction.commit();
+
       const keys = await this.cacheService.store.keys();
       const keysToDelete = keys.filter(key =>
-        key.startsWith(`userProductData${userId}`)
+        key.startsWith(`userProductData${deletedBy}`)
       );
 
       for (const keyToDelete of keysToDelete) {
@@ -284,7 +294,7 @@ export class UserProductsService {
 
       return {
         statusCode: 201,
-        statusDescription: 'Berhasil menghapus UserProduct.'
+        statusDescription: 'Berhasil menghapus user product.'
       };
     } catch (error) {
       this.logger.error(
@@ -292,6 +302,7 @@ export class UserProductsService {
         'error ===>',
         JSON.stringify(error, null, 2)
       );
+      await transaction.rollback();
       throw new Error(error.message);
     }
   }

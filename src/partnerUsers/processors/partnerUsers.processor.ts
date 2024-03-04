@@ -21,7 +21,7 @@ export class PartnerUserProcessor {
   @Process('addPartnerUserQueue')
   async processAddPartnerUser(job: Job<PartnerUserCreateRequest>) {
     const partnerUserData = job.data;
-    const { name } = partnerUserData;
+    const { createdBy } = partnerUserData;
 
     const t = await this.partnerUserRepository.sequelize.transaction();
 
@@ -39,7 +39,7 @@ export class PartnerUserProcessor {
       await t.commit();
       const keys = await this.cacheService.store.keys();
       const keysToDelete = keys.filter(key =>
-        key.startsWith(`partnerUserData${name}`)
+        key.startsWith(`partnerUserData${createdBy}`)
       );
 
       for (const keyToDelete of keysToDelete) {
@@ -65,7 +65,7 @@ export class PartnerUserProcessor {
   @Process('updatePartnerUserQueue')
   async processUpdatePartnerUser(job: Job<PartnerUserUpdateRequest>) {
     const partnerUserData = job.data;
-    const { id, name } = partnerUserData;
+    const { id, updatedBy } = partnerUserData;
 
     const t = await this.partnerUserRepository.sequelize.transaction();
 
@@ -84,7 +84,7 @@ export class PartnerUserProcessor {
       await t.commit();
       const keys = await this.cacheService.store.keys();
       const keysToDelete = keys.filter(key =>
-        key.startsWith(`partnerUserData${name}`)
+        key.startsWith(`partnerUserData${updatedBy}`)
       );
 
       for (const keyToDelete of keysToDelete) {

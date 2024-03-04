@@ -1,13 +1,20 @@
 import { InjectQueue } from '@nestjs/bull';
 import { CACHE_MANAGER, CacheStore } from '@nestjs/cache-manager';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException
+} from '@nestjs/common';
 import { GENERATE_LINK_REPOSITORY, REDIS_CACHE_TTL } from '@src/core/constants';
 import { LoggerService } from '@src/core/service/logger/logger.service';
+import axios from 'axios';
 import { Queue } from 'bull';
 import { Cache } from 'cache-manager';
 import * as dotenv from 'dotenv';
 
-import { GenerateLinkCreateRequest, GenerateLinkUpdateRequest } from '../dto';
+import { GenerateLinkCreateRequest } from '../dto';
 import { GenerateLink } from '../entity/generateLink.entity';
 import { PagingGenerateLink } from './generateLinks.interface';
 
@@ -15,7 +22,7 @@ dotenv.config();
 
 @Injectable()
 export class GenerateLinkService {
-  private readonly host: string;
+  private readonly openApiUrl = process.env.OPEN_API_URL;
   sequelize: any;
   constructor(
     @Inject(GENERATE_LINK_REPOSITORY)
@@ -45,7 +52,7 @@ export class GenerateLinkService {
 
       // get generate links from redis
       const cachedData = await this.cacheService.get<any>(
-        `generate linkData${userId}${currentPage}${perPage}`
+        `generateLinkData${userId}${currentPage}${perPage}`
       );
 
       if (cachedData) {
@@ -90,7 +97,7 @@ export class GenerateLinkService {
 
       // save generate links to redis
       this.cacheStoreService.set(
-        `generate linkData${userId}${currentPage}${perPage}`,
+        `generateLinkData${userId}${currentPage}${perPage}`,
         result,
         // save to redis for 4 hours
         { ttl: REDIS_CACHE_TTL / 6 }
@@ -107,7 +114,7 @@ export class GenerateLinkService {
     }
   }
 
-  async findById(userId: string, id: number): Promise<GenerateLink> {
+  async findById(userId: string, id: string): Promise<GenerateLink> {
     try {
       this.logger.log(
         'starting get detail generate link through existing cached',
@@ -115,7 +122,7 @@ export class GenerateLinkService {
       );
       // get generate link detail from redis
       const cachedData = await this.cacheService.get<GenerateLink>(
-        `generate linkData${userId}${id}`
+        `generateLinkData${userId}${id}`
       );
 
       if (cachedData) {
@@ -131,11 +138,7 @@ export class GenerateLinkService {
         '===running==='
       );
 
-      const response = await this.generateLinkRepository.findOne({
-        where: {
-          id
-        }
-      });
+      const response = await this.generateLinkRepository.findByPk(id);
 
       if (!response) {
         this.logger.error(
@@ -154,7 +157,7 @@ export class GenerateLinkService {
       );
 
       // save generate link detail to redis
-      this.cacheStoreService.set(`generate linkData${userId}${id}`, response, {
+      this.cacheStoreService.set(`generateLinkData${userId}${id}`, response, {
         // save to redis for 4 hours
         ttl: REDIS_CACHE_TTL / 6
       });
@@ -170,17 +173,50 @@ export class GenerateLinkService {
     }
   }
 
-  async create(dto: GenerateLinkCreateRequest): Promise<any> {
+  async create(headers: any, dto: GenerateLinkCreateRequest): Promise<any> {
     try {
       this.logger.log(
         'starting create generate link through BullMQ',
         '===running==='
       );
 
-      let createGenerateLinkResponse;
-      const job = await this.generateLinkQueue.add('addGenerateLinkQueue', dto);
-      // eslint-disable-next-line prefer-const
-      createGenerateLinkResponse = await job.finished();
+      const { clientId, relativeUrl, accessToken, signature, timestamp } =
+        headers;
+
+      try {
+        await axios.post(`${this.openApiUrl}verify-symmetric-signature`, dto, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'X-TIMESTAMP': timestamp,
+            'X-CLIENT-ID': clientId,
+            'X-SIGNATURE': signature,
+            'X-URL': relativeUrl
+          }
+        });
+      } catch (error) {
+        this.logger.error(
+          'error verify symmetric signature',
+          'error ===>',
+          JSON.stringify(error, null, 2)
+        );
+        if (error?.response?.data?.status_code === 400) {
+          throw new BadRequestException(
+            error?.response?.data?.status_description
+          );
+        }
+        if (error?.response?.data?.status_code === 401) {
+          throw new UnauthorizedException(
+            error?.response?.data?.status_description
+          );
+        }
+        throw new Error(error?.response?.data?.status_description);
+      }
+
+      const job = await this.generateLinkQueue.add('addGenerateLinkQueue', {
+        ...dto,
+        ...{ createdBy: dto?.partnerUserId }
+      });
+      const createGenerateLinkResponse = await job.finished();
       this.logger.log(
         'success add generate link to db',
         JSON.stringify(dto, null, 2)
@@ -189,7 +225,9 @@ export class GenerateLinkService {
       return {
         statusCode: 201,
         statusDescription: 'Create generate link success!',
-        data: createGenerateLinkResponse
+        data: {
+          accessUrl: `https://eli-white-label.com?token=${createGenerateLinkResponse?.link}`
+        }
       };
     } catch (error) {
       this.logger.error(
@@ -201,97 +239,62 @@ export class GenerateLinkService {
     }
   }
 
-  async update(dto: GenerateLinkUpdateRequest): Promise<any> {
-    const { id } = dto;
+  async delete(dto: any): Promise<any> {
+    const transaction = await this.sequelize.transaction();
+
     try {
-      this.logger.log(
-        'starting update generate link through BullMQ',
-        '===running==='
-      );
-
-      const findGenerateLink = await GenerateLink.findByPk(id);
-
-      if (!findGenerateLink) {
-        this.logger.error(
-          '===== Error while find generate link by id on update =====',
-          `Error: `,
-          'ID klaim tidak ditemukan'
-        );
-        throw new NotFoundException(
-          'ID klaim tidak ditemukan, Mohon periksa kembali.'
-        );
-      }
-
-      const job = await this.generateLinkQueue.add(
-        'updateGenerateLinkQueue',
-        dto
-      );
-
-      const response = await job.finished();
-
-      this.logger.log(
-        'success update generate link to db',
-        JSON.stringify(dto, null, 2)
-      );
-
-      return {
-        statusCode: 201,
-        statusDescription: 'Update generate link success!',
-        data: response
-      };
-    } catch (error) {
-      this.logger.error(
-        'error update generate link through BullMQ',
-        'error ===>',
-        JSON.stringify(error, null, 2)
-      );
-      throw new Error(error.message);
-    }
-  }
-
-  async delete(userId: string, id: string): Promise<any> {
-    try {
+      const { id, deletedBy } = dto;
       this.logger.log('starting delete generate link', '===running===');
 
-      const response = await this.generateLinkRepository.destroy({
-        where: { id }
-      });
+      const link = await this.generateLinkRepository.findByPk(id);
 
-      if (!response) {
+      if (!link) {
         this.logger.error(
-          '===== Error generate link by id =====',
+          '===== Error link by id =====',
           `Error: `,
-          'ID GenerateLink tidak ditemukan.'
+          'ID link tidak ditemukan.'
         );
         throw new NotFoundException(
-          'ID GenerateLink tidak ditemukan, Mohon periksa kembali.'
+          'ID link tidak ditemukan, Mohon periksa kembali.'
         );
       }
+
+      await link.update(
+        { deletedBy },
+        {
+          transaction
+        }
+      );
+
+      const response = await this.generateLinkRepository.destroy({
+        where: { id },
+        transaction
+      });
+
+      await transaction.commit();
 
       const keys = await this.cacheService.store.keys();
       const keysToDelete = keys.filter(key =>
-        key.startsWith(`generate linkData${userId}`)
+        key.startsWith(`generateLinkData${deletedBy}`)
       );
 
       for (const keyToDelete of keysToDelete) {
         await this.cacheService.del(keyToDelete);
       }
 
-      this.logger.log(
-        'success delete generate link',
-        JSON.stringify(response, null, 2)
-      );
+      this.logger.log('success delete link', JSON.stringify(response, null, 2));
 
       return {
         statusCode: 201,
-        statusDescription: 'Berhasil menghapus GenerateLink.'
+        statusDescription: 'Berhasil menghapus link.'
       };
     } catch (error) {
       this.logger.error(
-        'error delete generate link',
+        'error delete link',
         'error ===>',
         JSON.stringify(error, null, 2)
       );
+      await transaction.rollback();
       throw new Error(error.message);
     }
   }
