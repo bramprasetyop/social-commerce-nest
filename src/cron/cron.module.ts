@@ -3,25 +3,25 @@ import { Module } from '@nestjs/common';
 
 import { LoggerService } from '../core/service/logger/logger.service';
 import { QueueModule } from '../core/service/queue/queue.module';
-import { ClaimsCronService } from './claim/claim.cron';
-import { claimProviders } from './claim/claim.cron.providers';
-import { ClaimCronProcessor } from './claim/processor/claim.cron.processor';
+import { LinksCronService } from './link/link.cron';
+import { linkProviders } from './link/link.cron.providers';
+import { LinkCronProcessor } from './link/processor/link.cron.processor';
 
 @Module({
   imports: [
     QueueModule,
     BullModule.registerQueue({
-      name: 'claimCronQueue'
+      name: 'linkCronQueue'
     })
   ],
   providers: [
-    ClaimsCronService,
+    LinksCronService,
     LoggerService,
-    ClaimCronProcessor,
-    ...claimProviders
+    LinkCronProcessor,
+    ...linkProviders
   ],
 
   controllers: [],
-  exports: [ClaimsCronService, LoggerService]
+  exports: [LinksCronService, LoggerService]
 })
 export class CronModule {}

@@ -1,17 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
-import { Claim } from '@src/claims/entity/claim.entity';
-import { CLAIMS_REPOSITORY } from '@src/core/constants';
+import { PARTNERS_REPOSITORY } from '@src/core/constants';
+import { Partner } from '@src/partners/entity/partner.entity';
 
 @Injectable()
 export class SequelizeHealthIndicator extends HealthIndicator {
   sequelize: any;
   constructor(
-    @Inject(CLAIMS_REPOSITORY)
-    private readonly companyDocumentCutOffRepository: typeof Claim
+    @Inject(PARTNERS_REPOSITORY)
+    private readonly partnerRepository: typeof Partner
   ) {
     super();
-    this.sequelize = this.companyDocumentCutOffRepository.sequelize;
+    this.sequelize = this.partnerRepository.sequelize;
   }
 
   async isHealthy(): Promise<HealthIndicatorResult> {

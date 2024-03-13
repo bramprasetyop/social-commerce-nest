@@ -19,6 +19,7 @@ import { JwtAuthGuard } from '@src/core/service/guard';
 import { MapResponseSwagger } from '@src/core/utils/index.utils';
 
 import {
+  SubmitUserCreateRequest,
   UserCreateRequest,
   UserFindAllResponse,
   UserRequestList,
@@ -90,6 +91,15 @@ export class UsersController {
         ...{ createdBy: user?.nip }
       };
       return await this.user.create(jobData);
+    } catch (error) {
+      throw new InternalServerErrorException(error?.message);
+    }
+  }
+
+  @Post(`${API_PREFIX}user-submit`)
+  async submit(@Body() body: SubmitUserCreateRequest): Promise<any> {
+    try {
+      return await this.user.submit(body);
     } catch (error) {
       throw new InternalServerErrorException(error?.message);
     }

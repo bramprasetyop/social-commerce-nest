@@ -7,7 +7,11 @@ import { Queue } from 'bull';
 import { Cache } from 'cache-manager';
 import * as dotenv from 'dotenv';
 
-import { UserCreateRequest, UserUpdateRequest } from '../dto';
+import {
+  SubmitUserCreateRequest,
+  UserCreateRequest,
+  UserUpdateRequest
+} from '../dto';
 import { User } from '../entity/user.entity';
 import { PagingUser } from './users.interface';
 
@@ -161,6 +165,31 @@ export class UsersService {
   }
 
   async create(dto: UserCreateRequest): Promise<any> {
+    try {
+      this.logger.log('starting create user through BullMQ', '===running===');
+
+      let createUserResponse;
+      const job = await this.userQueue.add('addUserQueue', dto);
+      // eslint-disable-next-line prefer-const
+      createUserResponse = await job.finished();
+      this.logger.log('success add user to db', JSON.stringify(dto, null, 2));
+
+      return {
+        statusCode: 201,
+        statusDescription: 'Create user success!',
+        data: createUserResponse
+      };
+    } catch (error) {
+      this.logger.error(
+        'error create user through BullMQ',
+        'error ===>',
+        JSON.stringify(error, null, 2)
+      );
+      throw new Error(error.message);
+    }
+  }
+
+  async submit(dto: SubmitUserCreateRequest): Promise<any> {
     try {
       this.logger.log('starting create user through BullMQ', '===running===');
 

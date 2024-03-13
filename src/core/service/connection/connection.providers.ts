@@ -1,9 +1,9 @@
-import { Claim } from '@src/claims/entity/claim.entity';
-import { CLAIMS_REPOSITORY } from '@src/core/constants';
+import { PARTNERS_REPOSITORY } from '@src/core/constants';
+import { Partner } from '@src/partners/entity/partner.entity';
 
 export const connectionCheckProviders = [
   {
-    provide: CLAIMS_REPOSITORY,
-    useValue: Claim
+    provide: PARTNERS_REPOSITORY,
+    useValue: Partner
   }
 ];

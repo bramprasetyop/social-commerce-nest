@@ -53,7 +53,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     const decodedToken: any = jwt.decode(accessToken);
-    request.permissions = ['GENERATELINK_CAN_CREATE', 'CLAIM_CAN_VIEW'];
+    request.permissions = ['GENERATELINK_CAN_CREATE'];
     request.user = decodedToken;
 
     try {

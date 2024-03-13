@@ -13,7 +13,6 @@ import { join } from 'path';
 
 import { HomeController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
-import { ClaimsModule } from './claims/claims.module';
 import { DatabaseModule } from './core/database/database.module';
 import { ResponseMiddleware } from './core/middleware';
 import { ConnectionModule } from './core/service/connection/connection.module';
@@ -44,7 +43,6 @@ import { UsersModule } from './users/users.module';
     }),
     DatabaseModule,
     AuthModule,
-    ClaimsModule,
     ConnectionModule,
     CronModule,
     SftpModule,

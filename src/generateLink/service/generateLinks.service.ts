@@ -8,6 +8,7 @@ import {
   UnauthorizedException
 } from '@nestjs/common';
 import { GENERATE_LINK_REPOSITORY, REDIS_CACHE_TTL } from '@src/core/constants';
+import { KafkaProducerService } from '@src/core/service/kafka/producer/kafka-producer.service';
 import { LoggerService } from '@src/core/service/logger/logger.service';
 import axios from 'axios';
 import { Queue } from 'bull';
@@ -30,7 +31,8 @@ export class GenerateLinkService {
     private readonly logger: LoggerService,
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     @Inject(CACHE_MANAGER) private cacheStoreService: CacheStore,
-    @InjectQueue('generateLinkQueue') private generateLinkQueue: Queue
+    @InjectQueue('generateLinkQueue') private generateLinkQueue: Queue,
+    private readonly kafkaProducerService: KafkaProducerService
   ) {
     this.sequelize = this.generateLinkRepository.sequelize;
   }
@@ -232,6 +234,69 @@ export class GenerateLinkService {
     } catch (error) {
       this.logger.error(
         'error create generate link through BullMQ',
+        'error ===>',
+        JSON.stringify(error, null, 2)
+      );
+      throw new Error(error.message);
+    }
+  }
+
+  async sendToPDFGenerator(dto: any): Promise<any> {
+    try {
+      this.logger.log(
+        'starting send to pdf generator generate link using kafka',
+        '===running==='
+      );
+
+      this.kafkaProducerService.publish(
+        {
+          id: 2,
+          appCode: 'SCM',
+          namaTertanggung: 'Andrew W',
+          noTertanggung: '123123123',
+          file: 'SOCIALCOMMERCE/template'
+        },
+        'pdf-generator-topic'
+      );
+
+      this.logger.log(
+        'success add generate link to pdf generator',
+        JSON.stringify(dto, null, 2)
+      );
+
+      return {
+        statusCode: 201,
+        statusDescription: 'Send to pdf generator generate link success!',
+        data: {
+          message: 'success'
+        }
+      };
+    } catch (error) {
+      this.logger.error(
+        'error create generate link through kafka',
+        'error ===>',
+        JSON.stringify(error, null, 2)
+      );
+      throw new Error(error.message);
+    }
+  }
+
+  async verifyLink(token: string): Promise<any> {
+    try {
+      this.logger.log('starting verify link through BullMQ', '===running===');
+
+      const job = await this.generateLinkQueue.add('verifyLinkQueue', token);
+      const verifyLinkResponse = await job.finished();
+      this.logger.log('success verify link', JSON.stringify(token, null, 2));
+
+      return {
+        statusCode: 200,
+        statusDescription: 'Verify link success!',
+        data: verifyLinkResponse
+      };
+    } catch (error) {
+      this.logger.error(
+        'error verify link through BullMQ',
         'error ===>',
         JSON.stringify(error, null, 2)
       );

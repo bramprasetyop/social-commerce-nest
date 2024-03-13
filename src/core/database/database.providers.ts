@@ -1,4 +1,3 @@
-import { Claim } from '@src/claims/entity/claim.entity';
 import { GenerateLink } from '@src/generateLink/entity/generateLink.entity';
 import { OTP } from '@src/otp/entity/otp.entity';
 import { PartnerUser } from '@src/partnerUsers/entity/partnerUser.entity';
@@ -29,7 +28,6 @@ export const databaseProviders = [
         };
       }
       sequelize.addModels([
-        Claim,
         User,
         Partner,
         PartnerUser,

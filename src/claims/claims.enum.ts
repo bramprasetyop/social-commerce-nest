@@ -1,7 +1,0 @@
-enum Permission {
-  CLAIM_CAN_VIEW = 'CLAIM_CAN_VIEW',
-  CLAIM_CAN_CREATE = 'CLAIM_CAN_CREATE',
-  CLAIM_CAN_EDIT = 'CLAIM_CAN_EDIT',
-  CLAIM_CAN_DELETE = 'CLAIM_CAN_DELETE'
-}
-export default Permission;

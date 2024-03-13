@@ -1,11 +1,13 @@
 import { Process, Processor } from '@nestjs/bull';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject } from '@nestjs/common';
+import { Inject, UnauthorizedException } from '@nestjs/common';
 import {
   GENERATE_LINK_REPOSITORY,
   USERS_REPOSITORY
 } from '@src/core/constants';
 import { LoggerService } from '@src/core/service/logger/logger.service';
+import { PartnerUser } from '@src/partnerUsers/entity/partnerUser.entity';
+import { Partner } from '@src/partners/entity/partner.entity';
 import { User } from '@src/users/entity/user.entity';
 import { Job } from 'bull';
 import { Cache } from 'cache-manager';
@@ -25,6 +27,19 @@ export class GenerateLinkProcessor {
     private readonly logger: LoggerService,
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache
   ) {}
+
+  private getExcludedAttributes(): { exclude: string[] } {
+    return {
+      exclude: [
+        'createdAt',
+        'createdBy',
+        'updatedAt',
+        'updatedBy',
+        'deletedAt',
+        'deletedBy'
+      ]
+    };
+  }
 
   private async encrypt(data: any, key: string): Promise<any> {
     const cipher = crypto.createCipher('aes-256-cbc', key);
@@ -97,6 +112,58 @@ export class GenerateLinkProcessor {
         JSON.stringify(error, null, 2)
       );
       await t.rollback();
+      throw error;
+    }
+  }
+
+  @Process('verifyLinkQueue')
+  async processVerifyLinkQueue(job: Job<string>) {
+    const token = job.data;
+
+    try {
+      this.logger.log(
+        'Starting verify link in bull processor',
+        '===running==='
+      );
+
+      const userId = await this.decrypt(token, 'key');
+
+      const user = await this.generateLinkRepository.findOne({
+        where: {
+          userId,
+          isActive: true
+        },
+        include: [
+          { model: User, as: 'user', attributes: this.getExcludedAttributes() },
+          {
+            model: Partner,
+            as: 'partner',
+            attributes: this.getExcludedAttributes()
+          },
+          {
+            model: PartnerUser,
+            as: 'partnerUser',
+            attributes: this.getExcludedAttributes()
+          }
+        ],
+        attributes: ['link']
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('Invalid link or expired');
+      }
+
+      this.logger.log(
+        'Verify link in bull processor done',
+        JSON.stringify(user, null, 2)
+      );
+      return user;
+    } catch (error) {
+      this.logger.error(
+        'Verify link in bull processor',
+        'Error',
+        JSON.stringify(error, null, 2)
+      );
       throw error;
     }
   }

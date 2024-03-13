@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import claimPermission from '@src/claims/claims.enum';
 import { LoggerService } from '@src/core/service/logger/logger.service';
 import generateLinkPermission from '@src/generateLink/generateLinks.enum';
 import otpPermission from '@src/otp/otp.enum';
@@ -48,7 +47,6 @@ export class PermissionsService {
       this.logger.log('Starting to get all permissions', 'PermissionsService');
 
       const allEnums = [
-        claimPermission,
         generateLinkPermission,
         otpPermission,
         partnerUserPermission,
@@ -75,8 +73,6 @@ export class PermissionsService {
   }
 
   hasPermission(menu: any, action: string): boolean {
-    // remove this if on ait/production
-    return true;
     return menu.includes(action) && true;
   }
 }
